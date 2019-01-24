@@ -37,7 +37,7 @@ func (mailgunNotify MailgunNotify) Initialize() error {
 		return errors.New("Mailgun: Invalid PublicApiKey")
 	}
 
-	mailGunClient = mailgun.NewMailgun(mailgunNotify.Domain, mailgunNotify.ApiKey, mailgunNotify.PublicApiKey)
+	mailGunClient = mailgun.NewMailgun(mailgunNotify.Domain, mailgunNotify.ApiKey)
 
 	return nil
 }
@@ -48,7 +48,7 @@ func (mailgunNotify MailgunNotify) SendResponseTimeNotification(responseTimeNoti
 	message := getMessageFromResponseTimeNotification(responseTimeNotification)
 
 	mail := mailGunClient.NewMessage("StatusOkNotifier <notify@StatusOk.com>", subject, message, fmt.Sprintf("<%s>", mailgunNotify.Email))
-	_, _, mailgunErr := mailGunClient.Send(mail)
+	_, _, mailgunErr := mailGunClient.Send(context, mail)
 
 	if mailgunErr != nil {
 		return mailgunErr
@@ -63,7 +63,7 @@ func (mailgunNotify MailgunNotify) SendErrorNotification(errorNotification Error
 	message := getMessageFromErrorNotification(errorNotification)
 
 	mail := mailGunClient.NewMessage("StatusOkNotifier <notify@StatusOk.com>", subject, message, fmt.Sprintf("<%s>", mailgunNotify.Email))
-	_, _, mailgunErr := mailGunClient.Send(mail)
+	_, _, mailgunErr := mailGunClient.Send(context, mail)
 
 	if mailgunErr != nil {
 		return mailgunErr
