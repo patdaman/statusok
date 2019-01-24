@@ -7,8 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"time"
-
-	"github.com/influxdata/influxdb/client/v2"
+	"github.com/influxdata/influxdb1-client/v2"
 )
 
 type InfluxDb struct {
