@@ -1,6 +1,5 @@
 package notify
 
-//Inspired from https://github.com/zbindenren/logrus_mail
 import (
 	"bytes"
 	"net"
@@ -8,6 +7,7 @@ import (
 	"net/smtp"
 	"strconv"
 	"time"
+	"errors"
 )
 
 type MailNotify struct {
@@ -19,10 +19,36 @@ type MailNotify struct {
 	To       string `json:"to"`
 }
 
+type loginAuth struct {
+  username, password string
+}
+
 var (
 	isAuthorized bool
 	client       *smtp.Client
 )
+
+func LoginAuth(username, password string) smtp.Auth {
+	return &loginAuth{username, password}
+}
+
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	return "LOGIN", []byte(a.username), nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		switch string(fromServer) {
+		case "Username:":
+			return []byte(a.username), nil
+		case "Password:":
+			return []byte(a.password), nil
+		default:
+			return nil, errors.New("Unkown fromServer")
+		}
+	}
+	return nil, nil
+}
 
 func (mailNotify MailNotify) GetClientName() string {
 	return "Smtp Mail"
@@ -69,7 +95,7 @@ func (mailNotify MailNotify) Initialize() error {
 func (mailNotify MailNotify) SendResponseTimeNotification(responseTimeNotification ResponseTimeNotification) error {
 	if isAuthorized {
 
-		auth := smtp.PlainAuth("", mailNotify.Username, mailNotify.Password, mailNotify.Host)
+		auth := LoginAuth(mailNotify.Username, mailNotify.Password)
 
 		message := getMessageFromResponseTimeNotification(responseTimeNotification)
 
@@ -109,7 +135,7 @@ func (mailNotify MailNotify) SendResponseTimeNotification(responseTimeNotificati
 func (mailNotify MailNotify) SendErrorNotification(errorNotification ErrorNotification) error {
 	if isAuthorized {
 
-		auth := smtp.PlainAuth("", mailNotify.Username, mailNotify.Password, mailNotify.Host)
+		auth := LoginAuth(mailNotify.Username, mailNotify.Password)
 
 		message := getMessageFromErrorNotification(errorNotification)
 
